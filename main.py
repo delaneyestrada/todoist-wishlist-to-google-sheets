@@ -54,10 +54,13 @@ for project in todoist_api.state['projects']:
         wishlists.append(str(project["id"]))
 
 sheets_array = []
+counter = 0
+
 for list in wishlists:
     item_array = []
     for item in todoist_api.state['items']:
         if str(item['project_id']) == list:
+            counter += 1
             content = item['content']
             regex = r'\[.*?\]\(.*?\)'
             if re.search(regex, content) != None:
@@ -73,14 +76,27 @@ for list in wishlists:
             else: 
                 # Add to array with no price
                 item_array += [[content]]
+
     # Add to sheets array
-    sheets_array.append([">>>>>>>>>>>"])
+    project = todoist_api.projects.get_by_id(list)
+    project_name = project['project']['name']
+    sheets_array.append([project_name, "PRICE"])
+    num_items = len(item_array)
+    print(num_items)
+    print(counter)
+    counter += 1
     sheets_array += item_array
-print(sheets_array)
+    sheets_array += [["TOTAL:", '=SUM(B' + str(counter - num_items) + ':B' + str(counter) + ')']]
+    sheets_array += [["",""]]
+    counter += 2
+
 body = {
     'values': sheets_array
 }
 
-result = service.spreadsheets().values().update(
+request = service.spreadsheets().values().clear(spreadsheetId=SPREADSHEET_ID, range="Wishlist!A:B")
+response = request.execute()
+print(response)
+service.spreadsheets().values().update(
     spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME,
     valueInputOption="USER_ENTERED", body=body).execute()
