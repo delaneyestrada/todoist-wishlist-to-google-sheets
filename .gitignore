@@ -2,3 +2,5 @@ keys.py
 .vscode/
 __pycache__/
 env/
+credentials.json
+token.pickle
